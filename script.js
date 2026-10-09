@@ -1,13 +1,13 @@
 let baseDeDonneesJoueurs = [];
-let inventaire = JSON.parse(localStorage.getItem("inventaireTennis")) || [];
+let inventaire = JSON.parse(localStorage.getItem("inventaireTennis_V2")) || [];
 
 // --- SYSTÈME DE STOCKAGE DE PACKS ---
 const TEMPS_GENERATION_MS = 1 * 60 * 1000; // 1 minute
-let packsDisponibles = parseInt(localStorage.getItem("packsDispoTennis"));
+let packsDisponibles = parseInt(localStorage.getItem("packsDispoTennis_V2"));
 if (isNaN(packsDisponibles)) packsDisponibles = 1;
 
-let dateDernierCalcul = parseInt(localStorage.getItem("dateDernierCalculTennis")) || Date.now();
-localStorage.setItem("dateDernierCalculTennis", dateDernierCalcul);
+let dateDernierCalcul = parseInt(localStorage.getItem("dateDernierCalculTennis_V2")) || Date.now();
+localStorage.setItem("dateDernierCalculTennis_V2", dateDernierCalcul);
 
 const RANGS_RARETE = { "Commun": 1, "Peu-Commun": 2, "Rare": 3, "Très-Rare": 4, "Légendaire": 5 };
 const COULEURS = { "Commun": "#ecf0f1", "Peu-Commun": "#2ecc71", "Rare": "#3498db", "Très-Rare": "#9b59b6", "Légendaire": "#e67e22" };
@@ -20,8 +20,8 @@ let verrou = false;
 let boucleTemps = null;
 
 // État de l'album
-let vueAlbum = "toutes";          // "toutes" | "possedees" | "manquantes"
-let triAlbum = "rarete-desc";     // clé du <select>
+let vueAlbum = "toutes";
+let triAlbum = "rarete-desc";
 
 const $ = id => document.getElementById(id);
 
@@ -29,10 +29,9 @@ async function chargerJeu() {
     try {
         const rep = await fetch('joueurs.json');
         baseDeDonneesJoueurs = await rep.json();
-        // On mémorise l'ordre d'obtention : l'inventaire est déjà chronologique,
-        // on retrouve l'index de première apparition via la position dans le tableau.
         majCompteursAlbum();
         lancerGestionnairePacks();
+        brancherRotation();
     } catch (e) {
         console.error("Erreur chargement JSON", e);
         $("timer-display").innerText = "Erreur de chargement des joueurs";
@@ -48,6 +47,20 @@ function changerVue(nomVue) {
     document.querySelectorAll('.vue').forEach(v => v.classList.remove('active'));
     $(`vue-${nomVue}`).classList.add('active');
     if (nomVue === 'album') { afficherAlbum(); }
+}
+
+/* ---------- Filtres de l'album ---------- */
+document.querySelectorAll(".seg-btn[data-vue-album]").forEach(b => {
+    b.addEventListener("click", () => {
+        vueAlbum = b.dataset.vueAlbum;
+        document.querySelectorAll(".seg-btn[data-vue-album]").forEach(x => x.classList.remove("actif"));
+        b.classList.add("actif");
+        afficherAlbum();
+    });
+});
+const selectTri = $("tri-album");
+if (selectTri) {
+    selectTri.addEventListener("change", () => { triAlbum = selectTri.value; afficherAlbum(); });
 }
 
 /* ---------- Tirage ---------- */
@@ -107,6 +120,7 @@ function creerPoints() {
 
 /* ---------- Rotation du pack à la souris ---------- */
 function brancherRotationPack(scene, cible) {
+    if (!scene || !cible) return;
     scene.addEventListener("mousemove", e => {
         const r = scene.getBoundingClientRect();
         const px = (e.clientX - r.left) / r.width - 0.5;
@@ -119,14 +133,18 @@ function brancherRotationPack(scene, cible) {
         cible.style.setProperty("--rx", "4deg");
     });
 }
-brancherRotationPack($("scene-ouverture"), $("pack-gros-plan"));
+
+function brancherRotation() {
+    brancherRotationPack($("scene-ouverture"), $("pack-gros-plan"));
+    brancherRotationPack($("scene-accueil"), $("pack-accueil"));
+}
 
 /* ---------- Ouverture du pack ---------- */
 $("btn-ouvrir").addEventListener("click", () => {
     if (!baseDeDonneesJoueurs.length || packsDisponibles <= 0) return;
 
     packsDisponibles--;
-    localStorage.setItem("packsDispoTennis", packsDisponibles);
+    localStorage.setItem("packsDispoTennis_V2", packsDisponibles);
     actualiserAffichageBouton();
 
     // Tirage + tri CROISSANT : la meilleure carte est en index 4 (révélée en dernier)
@@ -142,7 +160,7 @@ $("btn-ouvrir").addEventListener("click", () => {
     });
 
     inventaire = inventaire.concat(packActuel);
-    localStorage.setItem("inventaireTennis", JSON.stringify(inventaire));
+    localStorage.setItem("inventaireTennis_V2", JSON.stringify(inventaire));
 
     etapeOuverture = 0;
     verrou = false;
@@ -163,9 +181,10 @@ $("btn-ouvrir").addEventListener("click", () => {
     pack.className = "pack-3d grand pret";
     pack.style.display = "block";
     scene.style.display = "block";
+    $("dechirure").style.display = "block";
     $("carte-affichee").className = "carte-cachee";
     $("carte-affichee").innerHTML = "";
-    $("tuto-clic").innerText = "Clique pour ouvrir !";
+    $("tuto-clic").innerText = "Clique sur le pack pour l'ouvrir !";
     creerPoints();
 
     changerVue('ouverture');
@@ -185,7 +204,7 @@ function etapeOuvertureSuivante() {
     if (etapeOuverture === 0) {
         verrou = true;
         const pack = $("pack-gros-plan");
-        pack.classList.add("explose");
+        pack.classList.add("dechire");
         $("tuto-clic").innerText = "";
         $("rayons").classList.add("on");
         if (RANGS_RARETE[meilleure] >= 4) $("rayons").classList.add("intense");
@@ -198,7 +217,7 @@ function etapeOuvertureSuivante() {
             afficherCarte(0);
             $("tuto-clic").innerText = "Clique pour continuer";
             verrou = false;
-        }, 550);
+        }, 1000);
         etapeOuverture = 1;
         return;
     }
@@ -274,7 +293,7 @@ function inventaireUnique() {
     inventaire.forEach((j, i) => {
         if (!vus.has(j.nom)) vus.set(j.nom, { joueur: j, ordre: i });
     });
-    return vus; // Map nom -> { joueur, ordre }
+    return vus;
 }
 
 function appliquerTri(liste) {
@@ -305,9 +324,8 @@ function afficherAlbum() {
     const vide = $("album-vide");
     grille.innerHTML = "";
 
-    const possedes = inventaireUnique(); // Map nom -> { joueur, ordre }
+    const possedes = inventaireUnique();
 
-    // Construction des deux ensembles, chacun dans le format { joueur, ordre }
     const listePossedees = [];
     possedes.forEach(entry => listePossedees.push(entry));
 
@@ -316,7 +334,6 @@ function afficherAlbum() {
         if (!possedes.has(j.nom)) listeManquantes.push({ joueur: j, ordre: i });
     });
 
-    // Choix de l'ensemble selon la vue
     let ensemble;
     if (vueAlbum === "possedees") ensemble = listePossedees;
     else if (vueAlbum === "manquantes") ensemble = listeManquantes;
@@ -324,12 +341,10 @@ function afficherAlbum() {
 
     const trie = appliquerTri(ensemble);
 
-    // Compteurs du sélecteur
     $("compte-toutes").textContent = baseDeDonneesJoueurs.length;
     $("compte-possedees").textContent = listePossedees.length;
     $("compte-manquantes").textContent = listeManquantes.length;
 
-    // Rendu
     if (!trie.length) {
         vide.hidden = false;
         vide.textContent = vueAlbum === "manquantes"
@@ -362,88 +377,59 @@ function majProgression(nbPossedes, total) {
 }
 
 function majCompteursAlbum() {
-    // Utile quand l'album n'est pas affiché (après une ouverture de pack)
     const possedes = inventaireUnique();
-    let totalCommun = 0, totalPeu = 0, totalRare = 0, totalTres = 0, totalLeg = 0;
-    const totalJeu = { "Commun": 0, "Peu-Commun": 0, "Rare": 0, "Très-Rare": 0, "Légendaire": 0 };
-    baseDeDonneesJoueurs.forEach(j => totalJeu[j.rarete]++);
-
-    const compte = { "Commun": 0, "Peu-Commun": 0, "Rare": 0, "Très-Rare": 0, "Légendaire": 0 };
-    possedes.forEach(({ joueur }) => compte[joueur.rarete]++);
-
-    let html = "";
-    for (let rarete of Object.keys(RANGS_RARETE)) {
-        html += `<div class="stat-box" style="background-color:${COULEURS[rarete]}">
-                    ${rarete.replace('-', ' ')} : ${compte[rarete]} / ${totalJeu[rarete]}
-                 </div>`;
-    }
-    $("stats-album").innerHTML = html;
-}
-
-/* ---------- Écouteurs de la barre d'outils ---------- */
-document.querySelectorAll(".seg-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        vueAlbum = btn.dataset.vueAlbum;
-        document.querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("actif", b === btn));
-        afficherAlbum();
+    let totalCommun = 0, totalPeu = 0, totalRare = 0, totalTresRare = 0, totalLegendaire = 0;
+    possedes.forEach(({ joueur }) => {
+        if (joueur.rarete === "Commun") totalCommun++;
+        else if (joueur.rarete === "Peu-Commun") totalPeu++;
+        else if (joueur.rarete === "Rare") totalRare++;
+        else if (joueur.rarete === "Très-Rare") totalTresRare++;
+        else if (joueur.rarete === "Légendaire") totalLegendaire++;
     });
-});
-
-$("selecteur-tri").addEventListener("change", e => {
-    triAlbum = e.target.value;
-    afficherAlbum();
-});
-
-/* ---------- Gestionnaire de packs ---------- */
-let dernierTick = 0;
-function lancerGestionnairePacks() {
-    actualiserCalculPacks();
-    actualiserAffichageBouton();
-    if (boucleTemps) cancelAnimationFrame(boucleTemps);
-    boucler();
+    if ($("vue-album").classList.contains("active")) afficherAlbum();
 }
 
-function boucler() {
-    const t = performance.now();
-    if (t - dernierTick > 1000) {
-        dernierTick = t;
-        if ($("vue-accueil").classList.contains("active")) {
-            actualiserCalculPacks();
+/* ---------- Gestion des packs ---------- */
+function actualiserAffichageBouton() {
+    if (packsDisponibles > 0) {
+        $("btn-ouvrir").disabled = false;
+        $("btn-ouvrir").innerText = `Ouvrir un pack (${packsDisponibles})`;
+    } else {
+        $("btn-ouvrir").disabled = true;
+        $("btn-ouvrir").innerText = "Aucun pack disponible";
+    }
+}
+
+function lancerGestionnairePacks() {
+    actualiserAffichageBouton();
+    if (boucleTemps) clearInterval(boucleTemps);
+    majTimer();
+    boucleTemps = setInterval(() => {
+        const maintenant = Date.now();
+        const ecoule = maintenant - dateDernierCalcul;
+        if (ecoule >= TEMPS_GENERATION_MS) {
+            const gagnes = Math.floor(ecoule / TEMPS_GENERATION_MS);
+            packsDisponibles += gagnes;
+            localStorage.setItem("packsDispoTennis_V2", packsDisponibles);
+            dateDernierCalcul += gagnes * TEMPS_GENERATION_MS;
+            localStorage.setItem("dateDernierCalculTennis_V2", dateDernierCalcul);
             actualiserAffichageBouton();
         }
-    }
-    boucleTemps = requestAnimationFrame(boucler);
+        majTimer();
+    }, 1000);
 }
 
-function actualiserCalculPacks() {
-    const tempsEcoule = Date.now() - dateDernierCalcul;
-    if (tempsEcoule >= TEMPS_GENERATION_MS) {
-        const packsGagnes = Math.floor(tempsEcoule / TEMPS_GENERATION_MS);
-        packsDisponibles += packsGagnes;
-        dateDernierCalcul += packsGagnes * TEMPS_GENERATION_MS;
-        localStorage.setItem("packsDispoTennis", packsDisponibles);
-        localStorage.setItem("dateDernierCalculTennis", dateDernierCalcul);
-    }
-}
-
-function actualiserAffichageBouton() {
-    const bouton = $("btn-ouvrir");
-    const affichage = $("timer-display");
-
-    const tempsRestant = TEMPS_GENERATION_MS - (Date.now() - dateDernierCalcul);
-    let min = Math.floor(tempsRestant / 60000);
-    let sec = Math.floor((tempsRestant % 60000) / 1000);
-    const texteChrono = `${min}:${sec < 10 ? '0'+sec : sec}`;
-
+function majTimer() {
     if (packsDisponibles > 0) {
-        bouton.disabled = false;
-        bouton.innerText = `Ouvrir le pack (${packsDisponibles} en stock)`;
-        affichage.innerText = `+1 pack en approche... (${texteChrono})`;
-    } else {
-        bouton.disabled = true;
-        bouton.innerText = "Recherche de joueurs...";
-        affichage.innerText = `Nouveau pack dans : ${texteChrono}`;
+        $("timer-display").innerText = "Tu as un pack à ouvrir !";
+        return;
     }
+    const ecoule = Date.now() - dateDernierCalcul;
+    const reste = Math.max(0, TEMPS_GENERATION_MS - ecoule);
+    const s = Math.ceil(reste / 1000);
+    const min = Math.floor(s / 60);
+    const sec = s % 60;
+    $("timer-display").innerText = `Prochain pack dans ${min}:${sec.toString().padStart(2, "0")}`;
 }
 
 chargerJeu();

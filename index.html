@@ -1,167 +1,121 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tennis Pack</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tennis Pack</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="bg-anime"></div>
 
-    <nav>
-        <div class="logo">TENNIS PACK</div>
-        <div class="nav-btns">
-            <button data-vue="accueil">Accueil</button>
-            <button data-vue="album">Mon Album</button>
-        </div>
-    </nav>
+<div class="bg-anime"></div>
 
-    <!-- ================= ACCUEIL ================= -->
-    <section id="vue-accueil" class="vue active">
-        <h1 class="titre-section">TENNIS PACK</h1>
+<nav>
+    <span class="logo">TENNIS&nbsp;PACK</span>
+    <div class="nav-btns">
+        <button data-vue="accueil">Accueil</button>
+        <button data-vue="album">Album</button>
+    </div>
+</nav>
 
-        <div class="scene-pack">
-            <div class="pack-3d flottant" id="pack-accueil">
-                <div class="face face-tranche"></div>
-                <div class="face face-arriere"></div>
-                <div class="face face-avant">
-                    <svg class="silhouette" viewBox="0 0 200 400" aria-hidden="true">
-                        <ellipse cx="100" cy="392" rx="52" ry="7" fill="#000" opacity=".45"/>
-                        <g fill="#000">
-                            <circle cx="100" cy="58" r="23"/>
-                            <path d="M100 80 C 80 84 70 104 68 138 L 64 236 L 136 236 L 132 138
-                                     C 130 104 120 84 100 80 Z"/>
-                            <path d="M70 232 L 62 300 L 54 388 L 74 388 L 80 300 L 92 240 Z"/>
-                            <path d="M130 232 L 138 300 L 146 388 L 126 388 L 120 300 L 108 240 Z"/>
-                            <path d="M70 110 L 42 150 L 34 190 L 46 194 L 58 158 L 82 122 Z"/>
-                            <path d="M130 110 L 152 140 L 150 168 L 138 166 L 122 132 Z"/>
-                            <rect x="28" y="176" width="9" height="42" rx="3"
-                                  transform="rotate(-14 32 197)"/>
-                            <ellipse cx="30" cy="150" rx="27" ry="34"
-                                     transform="rotate(-20 30 150)"/>
-                        </g>
-                        <g stroke="#1f3a5f" stroke-width="2.4" opacity=".55"
-                           transform="rotate(-20 30 150)">
-                            <line x1="8" y1="150" x2="52" y2="150"/>
-                            <line x1="12" y1="132" x2="48" y2="132"/>
-                            <line x1="12" y1="168" x2="48" y2="168"/>
-                            <line x1="30" y1="118" x2="30" y2="182"/>
-                            <line x1="18" y1="120" x2="18" y2="180"/>
-                            <line x1="42" y1="120" x2="42" y2="180"/>
-                        </g>
-                    </svg>
+<!-- ================= ACCUEIL ================= -->
+<section id="vue-accueil" class="vue active">
+    <h1 class="titre-section">TENNIS PACK</h1>
+    <p class="astuce">Ouvre des packs et collectionne les joueurs !</p>
+
+    <div class="scene-pack" id="scene-accueil">
+        <div class="pack-3d flottant" id="pack-accueil">
+            <div class="face face-tranche"></div>
+            <div class="face face-arriere"></div>
+            <div class="face face-avant">
+                <div class="pack-img-fallback">
                     <h2>TENNIS<br>PACK</h2>
-                    <div class="foil-effect"></div>
                 </div>
+                <img src="images/pack-tenant.png" alt="" class="pack-img"
+                     onerror="this.classList.add('ko')">
+                <div class="pack-tissu"></div>
+                <div class="foil-effect"></div>
             </div>
         </div>
+    </div>
 
-        <p class="astuce">Ouvre des packs et collectionne les joueurs !</p>
-        <div id="timer-display"></div>
-        <button id="btn-ouvrir">Chargement...</button>
-    </section>
+    <p id="timer-display">Chargement...</p>
+    <button id="btn-ouvrir" disabled>Ouvrir un pack</button>
+</section>
 
-    <!-- ================= ALBUM ================= -->
-    <section id="vue-album" class="vue">
-        <h1 class="titre-section">Mon Album de Joueurs</h1>
+<!-- ================= ALBUM ================= -->
+<section id="vue-album" class="vue">
+    <h1 class="titre-section">Mon Album de Joueurs</h1>
 
-        <!-- Barre de progression globale -->
-        <div class="progression">
-            <div class="progression-tete">
-                <span id="progression-texte">0 / 0 joueurs</span>
-                <span id="progression-pct">0 %</span>
-            </div>
-            <div class="progression-barre">
-                <div class="progression-remplissage" id="progression-remplissage"></div>
-            </div>
+    <div class="progression">
+        <div class="progression-tete">
+            <span id="progression-texte">0 / 0 joueurs</span>
+            <span id="progression-pct">0 %</span>
         </div>
-
-        <!-- Compteurs par rareté -->
-        <div id="stats-album" class="stats-grid"></div>
-
-        <!-- Barre d'outils : vues + tri -->
-        <div class="barre-outils">
-            <div class="segmente" id="selecteur-vue">
-                <button class="seg-btn actif" data-vue-album="toutes">
-                    Toutes <span class="seg-compte" id="compte-toutes">0</span>
-                </button>
-                <button class="seg-btn" data-vue-album="possedees">
-                    Possédées <span class="seg-compte" id="compte-possedees">0</span>
-                </button>
-                <button class="seg-btn" data-vue-album="manquantes">
-                    Manquantes <span class="seg-compte" id="compte-manquantes">0</span>
-                </button>
-            </div>
-
-            <label class="champ-tri">
-                Trier par
-                <select id="selecteur-tri">
-                    <option value="rarete-desc">Rareté (rares d'abord)</option>
-                    <option value="rarete-asc">Rareté (communes d'abord)</option>
-                    <option value="nom-asc">Nom (A → Z)</option>
-                    <option value="nom-desc">Nom (Z → A)</option>
-                    <option value="recent">Dernières obtenues</option>
-                </select>
-            </label>
+        <div class="progression-barre">
+            <div class="progression-remplissage" id="progression-remplissage"></div>
         </div>
+    </div>
 
-        <div id="grille-album" class="cartes-grid"></div>
-        <p class="album-vide" id="album-vide" hidden></p>
-    </section>
+    <div class="barre-outils">
+        <div class="segmente">
+            <button class="seg-btn actif" data-vue-album="toutes">Toutes <span class="seg-compte" id="compte-toutes">0</span></button>
+            <button class="seg-btn" data-vue-album="possedees">Possédées <span class="seg-compte" id="compte-possedees">0</span></button>
+            <button class="seg-btn" data-vue-album="manquantes">Manquantes <span class="seg-compte" id="compte-manquantes">0</span></button>
+        </div>
+        <label class="champ-tri">Trier par
+            <select id="tri-album">
+                <option value="rarete-desc">Rareté (rares d'abord)</option>
+                <option value="rarete-asc">Rareté (communes d'abord)</option>
+                <option value="nom-asc">Nom (A → Z)</option>
+                <option value="nom-desc">Nom (Z → A)</option>
+                <option value="recent">Dernières obtenues</option>
+            </select>
+        </label>
+    </div>
 
-    <!-- ================= OUVERTURE ================= -->
-    <section id="vue-ouverture" class="vue" tabindex="0" role="button"
-             aria-label="Ouvrir le pack">
-        <div class="fond-glow" id="fond-ouverture"></div>
-        <div class="rayons" id="rayons"></div>
-        <div class="flash" id="flash"></div>
-        <div id="particules"></div>
+    <p class="album-vide" id="album-vide" hidden></p>
+    <div class="cartes-grid" id="grille-album"></div>
+</section>
 
-        <div class="badge-nouveau" id="badge-nouveau">NOUVEAU !</div>
+<!-- ================= OUVERTURE ================= -->
+<div id="vue-ouverture" tabindex="0">
+    <div class="fond-glow" id="fond-ouverture"></div>
+    <div class="rayons" id="rayons"></div>
 
-        <div class="scene-pack" id="scene-ouverture">
-            <div class="pack-3d grand" id="pack-gros-plan">
-                <div class="face face-tranche"></div>
-                <div class="face face-arriere"></div>
-                <div class="face face-avant">
-                    <svg class="silhouette" viewBox="0 0 200 400" aria-hidden="true">
-                        <ellipse cx="100" cy="392" rx="52" ry="7" fill="#000" opacity=".45"/>
-                        <g fill="#000">
-                            <circle cx="100" cy="58" r="23"/>
-                            <path d="M100 80 C 80 84 70 104 68 138 L 64 236 L 136 236 L 132 138
-                                     C 130 104 120 84 100 80 Z"/>
-                            <path d="M70 232 L 62 300 L 54 388 L 74 388 L 80 300 L 92 240 Z"/>
-                            <path d="M130 232 L 138 300 L 146 388 L 126 388 L 120 300 L 108 240 Z"/>
-                            <path d="M70 110 L 42 150 L 34 190 L 46 194 L 58 158 L 82 122 Z"/>
-                            <path d="M130 110 L 152 140 L 150 168 L 138 166 L 122 132 Z"/>
-                            <rect x="28" y="176" width="9" height="42" rx="3"
-                                  transform="rotate(-14 32 197)"/>
-                            <ellipse cx="30" cy="150" rx="27" ry="34"
-                                     transform="rotate(-20 30 150)"/>
-                        </g>
-                        <g stroke="#1f3a5f" stroke-width="2.4" opacity=".55"
-                           transform="rotate(-20 30 150)">
-                            <line x1="8" y1="150" x2="52" y2="150"/>
-                            <line x1="12" y1="132" x2="48" y2="132"/>
-                            <line x1="12" y1="168" x2="48" y2="168"/>
-                            <line x1="30" y1="118" x2="30" y2="182"/>
-                            <line x1="18" y1="120" x2="18" y2="180"/>
-                            <line x1="42" y1="120" x2="42" y2="180"/>
-                        </g>
-                    </svg>
+    <div class="scene-pack" id="scene-ouverture">
+        <div class="pack-3d grand pret" id="pack-gros-plan">
+            <div class="face face-tranche"></div>
+            <div class="face face-arriere"></div>
+            <div class="face face-avant">
+                <div class="pack-img-fallback">
                     <h2>TENNIS<br>PACK</h2>
-                    <div class="foil-effect"></div>
                 </div>
+                <img src="images/pack-tenant.png" alt="" class="pack-img"
+                     onerror="this.classList.add('ko')">
+                <div class="pack-tissu"></div>
+                <div class="foil-effect"></div>
+            </div>
+
+            <!-- Déchirure -->
+            <div class="dechirure" id="dechirure">
+                <div class="lame haut" id="lame-haut"></div>
+                <div class="lame bas" id="lame-bas"></div>
+                <div class="couture" id="couture"></div>
+                <div class="fente-lumiere" id="fente-lumiere"></div>
             </div>
         </div>
+    </div>
 
-        <div class="carte-cachee" id="carte-affichee"></div>
+    <div class="badge-nouveau" id="badge-nouveau">NOUVEAU !</div>
+    <div class="flash" id="flash"></div>
+    <div id="particules"></div>
+    <div id="points" class="points"></div>
+    <div class="tuto-clic" id="tuto-clic">Clique sur le pack pour l'ouvrir !</div>
 
-        <div class="points" id="points"></div>
-        <p class="tuto-clic" id="tuto-clic">Clique sur le pack pour l'ouvrir !</p>
-    </section>
+    <div class="carte-cachee" id="carte-affichee"></div>
+</div>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

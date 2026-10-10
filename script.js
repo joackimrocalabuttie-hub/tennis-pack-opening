@@ -152,6 +152,12 @@ $("btn-ouvrir").addEventListener("click", () => {
     for (let i = 0; i < 5; i++) packActuel.push(tirerUnJoueur());
     packActuel.sort((a, b) => RANGS_RARETE[a.rarete] - RANGS_RARETE[b.rarete]);
 
+    // PRÉCHARGEMENT INVISIBLE DES IMAGES DU PACK
+    packActuel.forEach(joueur => {
+        const img = new Image();
+        img.src = joueur.photo;
+    });
+
     const dejaVus = new Set(inventaire.map(j => j.nom));
     nouvellesCartes = packActuel.map(j => {
         const nouveau = !dejaVus.has(j.nom);
@@ -273,7 +279,7 @@ function genererHTMLCarte(joueur, manquante = false) {
     return `
         <div class="vignette">
             <img src="${joueur.photo}" alt="${manquante ? "Joueur non découvert" : joueur.nom}"
-                 class="photo-joueur" onerror="this.src='images/default.png'">
+                 class="photo-joueur" loading="lazy" onerror="this.src='images/default.png'">
             ${silhouette}
         </div>
         <div class="infos-joueur">
